@@ -2,20 +2,16 @@
 #include "lists.h"
 
 /**
- * print_listint_safe - prints a listint_t list, even if it has a loop
- * @head: pointer to head node
- * Return: number of nodes in the list
+ * find_loop_entry - finds the entry node of a loop in a listint_t list
+ * @head: pointer to head of list
+ * Return: pointer to entry node, or NULL if no loop
  */
-size_t print_listint_safe(const listint_t *head)
+const listint_t *find_loop_entry(const listint_t *head)
 {
-	const listint_t *slow, *fast, *entry;
-	size_t count;
-	int has_loop;
-	int seen_entry;
+	const listint_t *slow, *fast;
 
 	slow = head;
 	fast = head;
-	has_loop = 0;
 
 	while (fast != NULL && fast->next != NULL)
 	{
@@ -23,38 +19,46 @@ size_t print_listint_safe(const listint_t *head)
 		fast = fast->next->next;
 		if (slow == fast)
 		{
-			has_loop = 1;
-			break;
+			slow = head;
+			while (slow != fast)
+			{
+				slow = slow->next;
+				fast = fast->next;
+			}
+			return (slow);
 		}
 	}
+	return (NULL);
+}
 
-	entry = NULL;
-	if (has_loop)
-	{
-		slow = head;
-		while (slow != fast)
-		{
-			slow = slow->next;
-			fast = fast->next;
-		}
-		entry = slow;
-	}
+/**
+ * print_listint_safe - prints a listint_t list, even if it has a loop
+ * @head: pointer to head node
+ * Return: number of nodes in the list
+ */
+size_t print_listint_safe(const listint_t *head)
+{
+	const listint_t *entry, *node;
+	size_t count;
+	int seen_entry;
 
+	entry = find_loop_entry(head);
 	count = 0;
 	seen_entry = 0;
-	slow = head;
-	while (slow != NULL)
+	node = head;
+
+	while (node != NULL)
 	{
-		if (entry != NULL && slow == entry && seen_entry)
+		if (entry != NULL && node == entry && seen_entry)
 		{
 			printf("-> [%p] %d\n", (void *)entry, entry->n);
 			break;
 		}
-		printf("[%p] %d\n", (void *)slow, slow->n);
+		printf("[%p] %d\n", (void *)node, node->n);
 		count++;
-		if (entry != NULL && slow == entry)
+		if (entry != NULL && node == entry)
 			seen_entry = 1;
-		slow = slow->next;
+		node = node->next;
 	}
 
 	return (count);

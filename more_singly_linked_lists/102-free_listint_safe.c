@@ -2,23 +2,16 @@
 #include "lists.h"
 
 /**
- * free_listint_safe - frees a listint_t list, even if it has a loop
- * @h: pointer to pointer to head of list
- * Return: size of the list that was freed
+ * find_loop_entry2 - finds the entry node of a loop in a listint_t list
+ * @head: pointer to head of list
+ * Return: pointer to entry node, or NULL if no loop
  */
-size_t free_listint_safe(listint_t **h)
+static listint_t *find_loop_entry2(listint_t *head)
 {
-	listint_t *slow, *fast, *entry, *tmp;
-	size_t count;
-	int has_loop;
-	int seen_entry;
+	listint_t *slow, *fast;
 
-	if (h == NULL || *h == NULL)
-		return (0);
-
-	slow = *h;
-	fast = *h;
-	has_loop = 0;
+	slow = head;
+	fast = head;
 
 	while (fast != NULL && fast->next != NULL)
 	{
@@ -26,37 +19,48 @@ size_t free_listint_safe(listint_t **h)
 		fast = fast->next->next;
 		if (slow == fast)
 		{
-			has_loop = 1;
-			break;
+			slow = head;
+			while (slow != fast)
+			{
+				slow = slow->next;
+				fast = fast->next;
+			}
+			return (slow);
 		}
 	}
+	return (NULL);
+}
 
-	entry = NULL;
-	if (has_loop)
-	{
-		slow = *h;
-		while (slow != fast)
-		{
-			slow = slow->next;
-			fast = fast->next;
-		}
-		entry = slow;
-	}
+/**
+ * free_listint_safe - frees a listint_t list, even if it has a loop
+ * @h: pointer to pointer to head of list
+ * Return: size of the list that was freed
+ */
+size_t free_listint_safe(listint_t **h)
+{
+	listint_t *entry, *node, *tmp;
+	size_t count;
+	int seen_entry;
 
+	if (h == NULL || *h == NULL)
+		return (0);
+
+	entry = find_loop_entry2(*h);
 	count = 0;
 	seen_entry = 0;
-	slow = *h;
-	while (slow != NULL)
+	node = *h;
+
+	while (node != NULL)
 	{
-		if (entry != NULL && slow == entry && seen_entry)
+		if (entry != NULL && node == entry && seen_entry)
 			break;
 
-		tmp = slow->next;
-		if (entry != NULL && slow == entry)
+		tmp = node->next;
+		if (entry != NULL && node == entry)
 			seen_entry = 1;
-		free(slow);
+		free(node);
 		count++;
-		slow = tmp;
+		node = tmp;
 	}
 
 	*h = NULL;
