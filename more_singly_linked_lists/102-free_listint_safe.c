@@ -11,6 +11,7 @@ size_t free_listint_safe(listint_t **h)
 	listint_t *slow, *fast, *entry, *tmp;
 	size_t count;
 	int has_loop;
+	int seen_entry;
 
 	if (h == NULL || *h == NULL)
 		return (0);
@@ -43,14 +44,18 @@ size_t free_listint_safe(listint_t **h)
 	}
 
 	count = 0;
+	seen_entry = 0;
 	slow = *h;
 	while (slow != NULL)
 	{
-		tmp = slow->next;
-		count++;
-		free(slow);
-		if (entry != NULL && slow == entry && count > 1)
+		if (entry != NULL && slow == entry && seen_entry)
 			break;
+
+		tmp = slow->next;
+		if (entry != NULL && slow == entry)
+			seen_entry = 1;
+		free(slow);
+		count++;
 		slow = tmp;
 	}
 
